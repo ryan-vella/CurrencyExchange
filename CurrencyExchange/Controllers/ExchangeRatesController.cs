@@ -20,7 +20,6 @@ namespace CurrencyExchange.Controllers
         {
             try
             {
-
                 decimal exchangeRate = await _exchangeRateService.GetLatestExchangeRateAsync(exchangeRateModel);
                 return Ok(exchangeRate);
             }
