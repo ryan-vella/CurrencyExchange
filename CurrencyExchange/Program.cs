@@ -27,7 +27,7 @@ builder.Services.AddDbContext<CurrencyExchangeDbContext>(options =>
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = "ryanvella.redis.cache.windows.net:6380,password=AXELJx2JVLhwcxyhKYjwF3C07ERiaRTvMAzCaCU2UdE=,ssl=True,abortConnect=False"; 
+    options.Configuration = configuration.GetConnectionString("RedisConfiguration"); 
     options.InstanceName = "CurrencyExchangeCache";
 });
 
