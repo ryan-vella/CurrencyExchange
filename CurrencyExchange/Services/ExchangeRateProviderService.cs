@@ -25,7 +25,6 @@ namespace CurrencyExchange.Services
             _logger = logger;
             _dbContext = dbContext;
         }
-
         public async Task<decimal> GetLatestExchangeRateAsync(ExchangeRateModel exchangeRateModel)
         {
             try
@@ -38,21 +37,29 @@ namespace CurrencyExchange.Services
                     return JsonConvert.DeserializeObject<CachedExchangeRate>(cachedData).Value;
                 }
 
-                // Check the database for exchange rate
-                var exchangeRateFromDatabase = await _dbContext.ExchangeRates.FirstOrDefaultAsync(
-                    er => er.SourceCurrency == exchangeRateModel.SourceCurrency && er.TargetCurrency == exchangeRateModel.TargetCurrency);
-
-                if (exchangeRateFromDatabase != null)
+                decimal exchangeRateValue = -1m; // Default value in case no rate is available
+                ExchangeRateDTO exchangeRateFromDatabase = null;
+                if (_dbContext != null)
                 {
-                    // Cache the exchange rate
-                    return exchangeRateFromDatabase.Rate;
+                    // Check the database for exchange rate
+                    exchangeRateFromDatabase = await _dbContext.ExchangeRates.FirstOrDefaultAsync(
+                       er => er.SourceCurrency == exchangeRateModel.SourceCurrency && er.TargetCurrency == exchangeRateModel.TargetCurrency);
+
+
+                    if (exchangeRateFromDatabase != null)
+                        // Cache the exchange rate
+                        return exchangeRateFromDatabase.Rate;
                 }
-                else
+
+                // Fetch and cache a new exchange rate
+                if (exchangeRateValue == -1m)
                 {
                     // Fetch and cache a new exchange rate
-                    var exchangeRate = await GetAndCacheExchangeRateAsync(exchangeRateModel);
-                    return exchangeRate;
+                    exchangeRateValue = await GetAndCacheExchangeRateAsync(exchangeRateModel);
                 }
+
+                return exchangeRateValue;
+
             }
             catch (Exception ex)
             {
@@ -60,7 +67,7 @@ namespace CurrencyExchange.Services
                 return -1;
             }
         }
-        private async Task<decimal> FetchExchangeRateFromApi(ExchangeRateModel exchangeRateModel)
+        public async Task<decimal> FetchExchangeRateFromApi(ExchangeRateModel exchangeRateModel)
         {
             try
             {
@@ -85,10 +92,10 @@ namespace CurrencyExchange.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch exchange rate from the API.");
-                throw;
+                throw new Exception("Failed to fetch exchange rate from the API.");
             }
         }
-        private async Task<decimal> GetAndCacheExchangeRateAsync(ExchangeRateModel exchangeRateModel)
+        public async Task<decimal> GetAndCacheExchangeRateAsync(ExchangeRateModel exchangeRateModel)
         {
             try
             {
