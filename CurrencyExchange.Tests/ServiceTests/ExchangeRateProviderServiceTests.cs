@@ -37,17 +37,13 @@ namespace CurrencyExchange.Tests
         public async Task GetLatestExchangeRateAsync_CachedRateExpired_DatabaseRateAvailable_ReturnsDatabaseRate()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "USD", TargetCurrency = "EUR", Rate = 1.2m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "USD", TargetCurrency = "EUR", Rate = 1.2m });
+            
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(context);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(context);
 
             // Act
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
@@ -64,7 +60,7 @@ namespace CurrencyExchange.Tests
             var cachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-15), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(cachedExchangeRate);
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(null, mockCache);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(null, mockCache);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -89,19 +85,14 @@ namespace CurrencyExchange.Tests
 
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.3m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.3m });
 
             var httpClient = _mockDataSetupHelper.SetupHttpClientMock("{\"rates\": {\"EUR\": 1.4}}");
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(context, mockCache, mockConfiguration, null, httpClient);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(context, mockCache, mockConfiguration, null, httpClient);
 
             // Act
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
@@ -118,7 +109,7 @@ namespace CurrencyExchange.Tests
             // Arrange
             var cachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(5), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(cachedExchangeRate);
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(null, mockCache);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(null, mockCache);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -136,15 +127,10 @@ namespace CurrencyExchange.Tests
             var expiredCachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-30), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(expiredCachedExchangeRate);
             var httpClient = _mockDataSetupHelper.SetupHttpClientMock("{\"rates\": {\"EUR\": 1.3}}");
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "USD", Rate = 1.2m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.2m });
 
             var exchangeRateApiConfiguration = new ExchangeRateApiConfiguration
             {
@@ -153,7 +139,7 @@ namespace CurrencyExchange.Tests
 
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(context, mockCache, mockConfiguration, null, httpClient);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(context, mockCache, mockConfiguration, null, httpClient);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -169,15 +155,13 @@ namespace CurrencyExchange.Tests
         public async Task GetLatestExchangeRateAsync_ExchangeRateInDatabase_ReturnsDatabaseRate()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             using var context = new CurrencyExchangeDbContext(options);
             context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "USD", TargetCurrency = "EUR", Rate = 1.2m });
             context.SaveChanges();
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(context);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(context);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -192,9 +176,7 @@ namespace CurrencyExchange.Tests
         public async Task GetLatestExchangeRateAsync_ExchangeRateNotInDatabase_FetchesAndCachesNewRate()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             var exchangeRateApiConfiguration = new ExchangeRateApiConfiguration
             {
@@ -209,12 +191,10 @@ namespace CurrencyExchange.Tests
             var httpClient = _mockDataSetupHelper.SetupHttpClientMock("{\"rates\": {\"EUR\": 1.4}}");
 
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "USD", Rate = 1.2m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.2m });
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(context: context, httpClientMock: httpClient, cacheMock: mockCache, configurationMock: mockConfiguration);
+
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(context: context, httpClientMock: httpClient, cacheMock: mockCache, configurationMock: mockConfiguration);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -241,16 +221,11 @@ namespace CurrencyExchange.Tests
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-               .UseInMemoryDatabase(databaseName: "test_database")
-               .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "USD", Rate = 1.2m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.2m });
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, context: context, configurationMock: mockConfiguration);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, context: context, configurationMock: mockConfiguration);
             // Act
             var result = await service.GetLatestExchangeRateAsync(exchangeRateModel);
 
@@ -273,19 +248,14 @@ namespace CurrencyExchange.Tests
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-               .UseInMemoryDatabase(databaseName: "test_database")
-               .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "USD", Rate = 1.2m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.2m });
 
             var expiredCachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-30), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(expiredCachedExchangeRate);
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(loggerMock: loggerMock, cacheMock: mockCache, httpClientMock: httpClient, context: context, configurationMock: mockConfiguration);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(loggerMock: loggerMock, cacheMock: mockCache, httpClientMock: httpClient, context: context, configurationMock: mockConfiguration);
             // Act & Assert
             await service.GetLatestExchangeRateAsync(exchangeRateModel);
 
@@ -307,7 +277,7 @@ namespace CurrencyExchange.Tests
             // Arrange
             var httpClient = _mockDataSetupHelper.SetupHttpClientMockForException(new Exception("Simulated exception"));
             var loggerMock = new Mock<ILogger<ExchangeRateProviderService>>();
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, loggerMock: loggerMock);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, loggerMock: loggerMock);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -343,16 +313,12 @@ namespace CurrencyExchange.Tests
 
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-              .UseInMemoryDatabase(databaseName: "test_database")
-              .Options;
-            using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "USD", Rate = 1.2m });
-            context.SaveChanges();
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(context, httpClientMock: httpClient, cacheMock: mockCache, configurationMock: mockConfiguration, loggerMock: loggerMock);
+            using var context = new CurrencyExchangeDbContext(options);
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "GBP", TargetCurrency = "EUR", Rate = 1.2m });
+
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(context, httpClientMock: httpClient, cacheMock: mockCache, configurationMock: mockConfiguration, loggerMock: loggerMock);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -372,7 +338,7 @@ namespace CurrencyExchange.Tests
             var httpClient = _mockDataSetupHelper.SetupHttpClientMock(null, HttpStatusCode.BadRequest); // Simulate an unsuccessful response
             var cachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-15), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(cachedExchangeRate);
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, cacheMock: mockCache);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, cacheMock: mockCache);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -389,7 +355,7 @@ namespace CurrencyExchange.Tests
             var cachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-15), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(cachedExchangeRate);
             var loggerMock = new Mock<ILogger<ExchangeRateProviderService>>();
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, cacheMock: mockCache, loggerMock: loggerMock);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, cacheMock: mockCache, loggerMock: loggerMock);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -413,9 +379,7 @@ namespace CurrencyExchange.Tests
         public async Task GetAndCacheExchangeRateAsync_CacheExchangeRateInDatabase_SuccessfulCache_ReturnsCachedRate()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             var exchangeRateApiConfiguration = new ExchangeRateApiConfiguration
             {
@@ -428,14 +392,11 @@ namespace CurrencyExchange.Tests
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            context.ExchangeRates.Add(new ExchangeRateDTO { SourceCurrency = "USD", TargetCurrency = "EUR", Rate = 1.2m });
-            context.SaveChanges();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context, new ExchangeRateDTO { SourceCurrency = "USD", TargetCurrency = "EUR", Rate = 1.2m });
 
             var httpClient = _mockDataSetupHelper.SetupHttpClientMock("{\"rates\": {\"EUR\": 1.2}}");
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(configurationMock: mockConfiguration, context: context, httpClientMock: httpClient);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(configurationMock: mockConfiguration, context: context, httpClientMock: httpClient);
 
 
             // Act
@@ -444,21 +405,17 @@ namespace CurrencyExchange.Tests
             // Assert
             Assert.NotNull(cachedRate); // Should have cached the rate in the database
             Assert.Equal(cachedRate.Rate, result);
-
-
         }
 
         [Fact]
         public async Task GetAndCacheExchangeRateAsync_CacheExchangeRateInDatabase_ExceptionThrown_LogsError()
         {
             // Arrange
-            var options = new DbContextOptionsBuilder<CurrencyExchangeDbContext>()
-                .UseInMemoryDatabase(databaseName: "test_database")
-                .Options;
+            var options = _mockDataSetupHelper.GetInMemoryDbContextOptions();
 
             using var context = new CurrencyExchangeDbContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            _mockDataSetupHelper.SetupDatabaseWithInitialData(context);
+
 
             var exchangeRateApiConfiguration = new ExchangeRateApiConfiguration
             {
@@ -471,7 +428,7 @@ namespace CurrencyExchange.Tests
             var cachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-15), Value = 1.2m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(cachedExchangeRate);
             var loggerMock = new Mock<ILogger<ExchangeRateProviderService>>();
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, loggerMock: loggerMock);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, loggerMock: loggerMock);
 
             var exchangeRateModel = new ExchangeRateModel { SourceCurrency = "USD", TargetCurrency = "EUR" };
 
@@ -510,7 +467,7 @@ namespace CurrencyExchange.Tests
 
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, configurationMock: mockConfiguration);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, configurationMock: mockConfiguration);
 
 
             // Act
@@ -538,13 +495,10 @@ namespace CurrencyExchange.Tests
 
             var mockConfiguration = _mockDataSetupHelper.SetupConfigurationMock(exchangeRateApiConfiguration);
 
-            var service = _mockDataSetupHelper.CreateServiceWithMocks(httpClientMock: httpClient, configurationMock: mockConfiguration);
+            var service = _mockDataSetupHelper.CreateExchangeRateProviderServiceWithMocks(httpClientMock: httpClient, configurationMock: mockConfiguration);
 
             // Assert and Act
             await Assert.ThrowsAsync<Exception>(() => service.FetchExchangeRateFromApi(exchangeRateModel));
         }
-
-        
-
     }
 }

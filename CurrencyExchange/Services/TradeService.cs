@@ -13,7 +13,7 @@ namespace CurrencyExchange.Services
         private readonly IDistributedCache _distributedCache;
         private readonly ILogger<TradeService> _logger;
         private readonly IExchangeRateProviderService _exchangeRateRetriever;
-
+       
         public TradeService(CurrencyExchangeDbContext dbContext, IDistributedCache distributedCache, ILogger<TradeService> logger, IExchangeRateProviderService exchangeRateRetriever)
         {
             _dbContext = dbContext;
@@ -57,14 +57,14 @@ namespace CurrencyExchange.Services
             }
         }
 
-        private async Task IncrementTradeCountAsync(string clientId)
+        public async Task IncrementTradeCountAsync(string clientId)
         {
             try
             {
                 string cacheKey = $"TradeCount_{clientId}";
                 string cachedValue = await _distributedCache.GetStringAsync(cacheKey);
 
-                int tradeCount = 0;
+                int tradeCount = 1;
                 if (!string.IsNullOrEmpty(cachedValue) && int.TryParse(cachedValue, out int cachedTradeCount))
                 {
                     tradeCount = cachedTradeCount + 1;
@@ -83,7 +83,7 @@ namespace CurrencyExchange.Services
                 throw;
             }
         }
-        private async Task<bool> IsTradeLimitExceeded(string clientId)
+        public async Task<bool> IsTradeLimitExceeded(string clientId)
         {
             try
             {
