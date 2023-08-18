@@ -50,11 +50,8 @@ namespace CurrencyExchange.Tests
             var cachedExchangeRate = new CachedExchangeRate { Timestamp = DateTime.UtcNow.AddMinutes(-15), Value = 1.4m };
             var mockCache = _mockDataSetupHelper.SetupCacheMock(cachedExchangeRate);
             var loggerMock = new Mock<ILogger<TradeService>>();
-            var distributedCacheWrapperMock = new Mock<IDistributedCacheWrapper>();
 
-            var dbContextMock = new Mock<CurrencyExchangeDbContext>();
-
-            var tradeService = _mockDataSetupHelper.CreateTradeProviderServiceWithMocks(context, mockCache, loggerMock, exchangeRateProviderServiceMock, distributedCacheWrapperMock);
+            var tradeService = _mockDataSetupHelper.CreateTradeProviderServiceWithMocks(context, mockCache, loggerMock, exchangeRateProviderServiceMock);
 
             // Act
             var result = await tradeService.PerformTradeAsync(tradeRequestModel);

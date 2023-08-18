@@ -73,7 +73,5 @@ namespace CurrencyExchange.Tests.ControllerTests
             badRequestObjectResult.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
             badRequestObjectResult.Value.Should().Be("Invalid currency.");
         }
-
-        // Other test methods...
     }
 }

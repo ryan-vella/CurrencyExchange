@@ -6,12 +6,7 @@ using Microsoft.Extensions.Configuration;
 using CurrencyExchange.DbContexts;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
 using CurrencyExchange.Models.DTOs;
-using Moq.Protected;
-using Microsoft.Extensions.Options;
 using CurrencyExchange.Tests.Helpers;
 
 namespace CurrencyExchange.Tests
